@@ -1,0 +1,223 @@
+NODES (MINIONS) - IS A NODE
+CLUSTER GROUP OF NODES
+MASTER TO MANAGE THE CLUSTER
+
+COMPONENTS
+
+API SERVER  - act as the frondend for kubernetes,the users, management devices, CLI, all talk to the API server to interact with kubernetes cluster. 
+
+etcd - distributed reliable key value store used by kubernetes to store all data used to manage the cluster.
+multiple nodes and multiple masters in cluster, etcd stores all that information on all the nodes in the cluster in a distributed manner. 
+etcd is resposible for implementing locks within the cluster to ensure that there  areno conflicts between the MASTERs.
+
+SCHEDULER - is responsile for distributing work or containers across multiple nodes. it looks for newly creadted containers and assigns them to nodes.
+
+
+CONTROLLER  - are the brain behind the orchestration. they are responding when nodes,containers or end points goes down. controllers make decisions to bring up new containers in such cases.
+
+CONTINER RUNTIME - is underlying software that is used to run containers. we use Docker. but there are other options as well.
+
+KUBLETE - is the agent that runs on each node in the cluster. the agent is responsible for making sure that the containers are running on the nodes as expected.
+
+two types of servers - Master and Worker and a set of components that make up Kubernetes.
+
+master will have - kube-apiserver
+worker node - will have kubelet agent
+
+kubectl // is a sinngle line command is used to deploy and manage applications on a kubernetes cluster.
+
+kubectl run hello-minikube
+kubectl cluster-info
+kubectl get nodes
+
+
+kubernetes setup
+
+minikube  // kubernetes setup in all in one setup
+kubeadmin // used to configure kubernetes in a multinode setup in local machine.
+
+play-with-k8s.com
+
+MINIKUBE  // used to learn kubernetes in local system
+
+kubelet
+kube-apiserver
+etcd
+node-controller
+replica-cotroller
+container Runtime
+MINIKUBE
+
+ need to download Minikube.exe and kubctl in a local system 
+Hypervisor  install in system with kubectl cli and minikube.exe
+ 
+
+https://kubernetes.io/docs/tasks/tools/install-kubectl/#install-kubectl-on-windows 
+ https://kubernetes.io/docs/tasks/tools/install-minikube/
+https://github.com/kubernetes/minikube/releases/tag/v1.7.2
+
+sudo apt install openssh-server -y
+sudo systemctl status ssh
+sudo ufw allow ssh
+
+sudo vi /etc/hostname // kubemaster
+sudo vi /etc/hosts    // kubemaster
+
+sudo vi /etc/hostname // kubenode1
+sudo vi /etc/hosts    // kubenode1
+
+sudo vi /etc/hostname // kubenode2
+sudo vi /etc/hosts    // kubenode2
+
+vi /etc/network/interfaces
+ # Configure enp0s8 interfaces
+ auto enp0s8
+ iface enp0s8 inet static
+	   address 192.168.0.100
+	   netmask 255.255.255.0
+	   
+reboot
+
+
+swapoff -a
+vi /etc/fstab  // # swap
+
+https://docs.docker.com/v17.09/engine/installation/linux/docker-ce/ubuntu/
+
+https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
+
+sudo apt-get update && sudo apt-get install -y apt-transport-https curl
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+cat <<EOF | sudo tee /etc/apt/sources.list.d/kubernetes.list
+deb https://apt.kubernetes.io/ kubernetes-xenial main
+EOF
+sudo apt-get update
+sudo apt-get install -y kubelet kubeadm kubectl
+
+https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/
+
+sudo kubeadm init --pod-network-cidr=10.244.0.0/16 --apiserver-advertise-address=172.31.123.74
+
+
+  mkdir -p $HOME/.kube
+  sudo cp -i /etc/kubernetes/admin.conf HOME/.kube/config
+  sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/2140ac876ef134e0ed5af15c65e414cf26827915/Documentation/kube-flannel.yml
+
+  kubectl get pods --all-namespaces
+  kubectl get nodes
+  
+ kubectl run nginx --image=rocketraja
+ kubectl get pods
+     kubectl delete deployment/nginx
+     kubectl run nginx --image=nginx
+     kubectl get pods
+     kubectl describe pods
+     kubectl get pods -o wide
+
+
+
+pod.yml
+
+apiVersion: v1
+kind: Pod
+metadata:
+ name: myapp-pod
+ labels: 
+   app: myapp-pod
+   
+spec:
+
+kubectl create -f pod.yml
+
+kubectl get pods
+kubctl distributed pod myapp-pod
+
+
+rc-pod.yml
+
+apiVersion: v1
+kind: ReplicationController
+metadata:
+ name: myapp-rc
+ labels: 
+   app: myapp-
+   type: front-end
+   
+spec:
+ template:
+   metadata:
+    name: myapp-pod
+    labels: 
+     app: myapp-
+	 type: front-end
+   
+   spec:
+     containers:
+	 - name: nginx-container
+	   image: nginx
+ replicas: 3 
+ 
+ kubectl create -f rc-pod.yml
+ 
+ kubectl get replicationcontroller
+
+ replicaset-pod.yml
+ 
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: myapp-replicaset
+  labels:
+    app: myapp
+    type: front-end
+spec:
+  template:
+    metadata:
+      name: myapp-pod
+      labels:
+        app: myapp
+        type: front-end
+
+
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx
+replicas: 3
+selector:
+  matchLables:
+    type: front-end
+
+
+kubectl create -f replicatset-pod.yml
+kubectl get replicaset
+kubectl get pods
+
+
+labels and selectors
+
+kubectl replace -f replicaset-pod.yml
+
+kubectl scale --replicas=6 -f replicaset-pod.yml
+
+kubectl scale --replicas=6  ap-replicaset
+
+kubctl delete replicaset myapp-relicaset
+
+kubctl rollout status deployment/myapp-deloyment
+
+kubctl rollout history deployment/myapp-deloyment
+
+kubctl delete deployment myapp-deloyment 
+
+kubectl get all
+
+kubctl create -f deployment.yml --record
+kubctl rollout status deployment/myapp-deloyment
+
+kubctl set image deployment/myapp-deloyment nginx-container=nginx:1.12-perl 
+
+kubectl rollout undo deployment/myapp-deloyment
+kubectl rollout status deployment/myapp-deloyment
